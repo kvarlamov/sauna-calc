@@ -1,24 +1,25 @@
 <template>
   <div class="hello" id="main">
-    <h1>Sauna calculator</h1>  
+    <h1>Sauna calculator</h1>
+    <button @click.prevent="calculate" :disabled="step < 4" :class="{ disabled: step < 4 }">КАЛЬКУЛИРОВАТЬ</button>
+    <h3 v-show="showPrice">Final price is <span :class="{greenText: !changed}">{{finalPrice}}</span> </h3>
+    <h2 v-show="showPrice">Final price for you: <span :class="{greenText: !changed}">{{finalPriceForOne}}</span> </h2>
     <div class="step" id="first">
         <label for="numberOfPeople">Количество людей: </label>
-        <input type="text" name="numberOfPeople" id="numberOfPeople" ref="numberOfPeople" v-model="numberOfPeople" @keyup.enter="enterClicked()" @change="hourPriceChange()">
+        <input type="text" name="numberOfPeople" id="numberOfPeople" v-model="numberOfPeople" @focus="onFocusInput()" @keyup.enter="enterClicked()" @change="hourPriceChange()">
     </div>
-    <div class="step" id="second" v-show="showElem2">
+    <div class="step" id="second" v-show="step >= 2">
         <label for="numberWithoutAdditional">Людей без увеличения стоимости влезает: </label>
-        <input type="text" name="numberWithoutAdditional" id="numberWithoutAdditional" ref="numberWithoutAdditional" v-model="numberWithoutAdditional" @keyup.enter="enterClicked()" @change="hourPriceChange()">
+        <input type="text" name="numberWithoutAdditional" id="numberWithoutAdditional" @focus="onFocusInput()" v-model="numberWithoutAdditional" @keyup.enter="enterClicked()" @change="hourPriceChange()">
     </div>
-    <div class="step" id="third" v-show="showElem3">
+    <div class="step" id="third" v-show="step >= 3">
         <label for="hourPrice">Стоимость часа: </label>
-        <input type="text" name="hourPrice" id="hourPrice" v-model="hourPrice" ref="hourPrice" @keyup.enter="enterClicked()" @change="hourPriceChange()">
+        <input type="text" name="hourPrice" id="hourPrice" v-model="hourPrice" @keyup.enter="enterClicked()" @change="hourPriceChange()" @focus="onFocusInput()">
     </div>
-    <div class="step" id="fourth" v-show="showElem4">
+    <div class="step" id="fourth" v-show="step >= 4">
         <label for="numOfHours">Количество часов: </label>
-        <input type="text" name="numOfHours" id="numOfHours" v-model="numOfHours" ref="numOfHours" @keyup.enter="enterClicked()">
-    </div>
-    <h3 v-show="step>=5">Final price is {{finalPrice}}</h3>
-    <h2 v-show="step>=5">Final price for you: {{finalPrice/numberOfPeople}}</h2>
+        <input type="text" name="numOfHours" id="numOfHours" v-model="numOfHours" @keyup.enter="enterClicked()" @focus="onFocusInput()">
+    </div>    
   </div>
 </template>
 
@@ -32,17 +33,23 @@ export default {
           numberWithoutAdditional: 6,
           hourPrice: 1300,
           numOfHours: 5,
-          finalPrice: 0
+          finalPrice: 0,
+          finalPriceForOne: 0,
+          shoPrice: false,
+          changed: false
       }
   },
   mounted(){
-    document.getElementById('numberOfPeople').focus()
+    this.$nextTick(() => {
+        document.getElementById('numberOfPeople').focus()
+      });
+    
   },
   computed: {
     showElem2: function () {
       if (this.step >= 2) {
         //this.$refs.numberWithoutAdditional.focus();
-        return true;
+        
       }
 
       return false;
@@ -65,15 +72,39 @@ export default {
   methods: {
     enterClicked() {      
       this.step++;
-      if (this.step >= 5) {
-        this.finalPrice = this.numOfHours * this.hourPrice;
-      }      
+      this.$nextTick(() => {
+        this.focusInput();
+      });
     }, 
-    hourPriceChange() {
-      console.log('fired')
-        if (this.numberOfPeople > this.numberWithoutAdditional) {
+    hourPriceChange() {      
+      if (this.numberOfPeople > this.numberWithoutAdditional) {
           this.hourPrice = this.hourPrice * ((10 * (this.numberOfPeople - this.numberWithoutAdditional) / 100) + 1)        
       }
+    },
+    calculate(){
+      this.finalPrice = this.numOfHours * this.hourPrice;
+      this.finalPriceForOne = (Math.round((this.finalPrice/this.numberOfPeople) * 100) / 100).toFixed(2)
+      this.showPrice = true
+      this.changed = false
+    },
+    onFocusInput(){
+      this.changed = true      
+    },
+    focusInput() {      
+      switch (this.step) {
+        case 2:
+          document.getElementById('numberWithoutAdditional').focus()
+          break;
+        case 3:
+          document.getElementById('hourPrice').focus()
+          break;
+        case 4:
+          document.getElementById('numOfHours').focus()          
+          break;
+        default:
+          break;
+      }
+      
     }
   }
 }
@@ -81,23 +112,39 @@ export default {
 
 <style scoped>
 .step{
-  height: 10%;
-  width: 100%;
+  height: 15%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 10px;
+  margin: 7px;
 }
 
 h3 {
   margin: 40px 0 0;
 }
 input {
-  width: 60px;
+  width: 40px;
 }
 label{
-  width: 330px;
+  width: 250px;
   text-align: right;
-  margin-right: 10px;
+  margin-right: 7px;
+}
+.greenText{
+  color: green;
+}
+
+span {
+  color: orange;
+}
+
+.disabled {
+  background-color: lightgray;
+}
+
+button {
+  background-color: cyan;  
+}
+button:hover {
+  background-color: green;
 }
 </style>
